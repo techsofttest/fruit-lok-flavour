@@ -70,7 +70,11 @@ interface ProductResponse {
 async function getSEO(): Promise<ProductResponse> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  const res = await fetch(`${baseUrl}/about`);
+  const res = await fetch(`${baseUrl}/about`, {
+   next: {
+      revalidate: 60,
+    },
+  });
 
   if (!res.ok) {
     throw new Error("Failed to fetch SEO data");

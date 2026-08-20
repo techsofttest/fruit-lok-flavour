@@ -70,7 +70,9 @@ async function getBlogData(slug: string): Promise<BlogResponse | null> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   try {
-    const res = await fetch(`${baseUrl}/product/${slug}`);
+    const res = await fetch(`${baseUrl}/product/${slug}`, {
+      next: { revalidate: 60 },
+    });
 
     if (!res.ok) return null;
     return res.json();
