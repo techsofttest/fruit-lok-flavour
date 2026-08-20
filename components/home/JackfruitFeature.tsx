@@ -44,6 +44,7 @@ export default function JackfruitFeature({page}:{page:any}) {
 
           <div className="flex-1 flex flex-col items-center text-center px-8 md:px-12">
             <div className="font-flavours text-3xl md:text-4xl font-extrabold text-white leading-tight mb-8 max-w-lg" dangerouslySetInnerHTML={{ __html:page.content  }}/>
+            <Link href="/products" className="inline-block">
             <JackfruitButton
               id="jackfruit-cta-btn-desktop"
               variant="filled"
@@ -51,7 +52,7 @@ export default function JackfruitFeature({page}:{page:any}) {
               textClass="text-white"
             >
               Explore Jackfruit Products
-            </JackfruitButton>
+            </JackfruitButton></Link>
           </div>
         </div>
       </div>
