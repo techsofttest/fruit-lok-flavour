@@ -98,6 +98,7 @@ export default function ProductInfo({ product }: ProductDetailItem) {
 
         {/* Star Rating & PDF Button */}
         <div className="flex flex-wrap items-center gap-4">
+          {product.details.rating && (
           <div className="flex items-center gap-2">
             <div className="flex text-brand-yellow text-xl">
               {"★".repeat(Math.round(parseFloat(product.details.rating || "0")))}
@@ -105,7 +106,7 @@ export default function ProductInfo({ product }: ProductDetailItem) {
             <span className="text-sm font-bold text-zinc-600">
               {product.details.rating} rating
             </span>
-          </div>
+          </div>)}
 
           {/* {product.pdf && (
             <button

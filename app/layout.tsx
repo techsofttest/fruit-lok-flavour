@@ -46,11 +46,7 @@ async function getSEO(): Promise<LayoutResponse | null> {
   }
 
   try {
-    const res = await fetch(`${baseUrl}/layout`, {
-      next: {
-        revalidate: 60,
-      },
-    });
+    const res = await fetch(`${baseUrl}/layout`);
 
     if (!res.ok) {
       console.error(`Failed to fetch SEO layout data: ${res.statusText}`);

@@ -41,9 +41,7 @@ async function getBlogData(slug: string): Promise<BlogResponse | null> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   try {
-    const res = await fetch(`${baseUrl}/blog/${slug}`, {
-      next: { revalidate: 60 },
-    });
+    const res = await fetch(`${baseUrl}/blog/${slug}`);
 
     if (!res.ok) return null;
     return res.json();
