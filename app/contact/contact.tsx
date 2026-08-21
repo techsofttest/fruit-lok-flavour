@@ -5,8 +5,17 @@ import Image from "next/image";
 import SectionWaveDivider from "@/components/ui/SectionWaveDivider";
 import JackfruitButton from "@/components/ui/JackfruitButton";
 import PageHeroBanner from "@/components/global/PageHeroBanner";
+import Captcha from "./Captcha";
 
 export default function ContactPage({ banner, contact, page }: { banner: any; contact: any; page: any }) {
+  const inquiryOptions = [
+  "Request Free Samples",
+  "Wholesale & Bulk Orders",
+  "Custom Mesh & Thickness",
+  "General Question",
+];
+
+const [dropdownOpen, setDropdownOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,44 +39,64 @@ export default function ContactPage({ banner, contact, page }: { banner: any; co
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setStatus({ loading: true, success: null, message: "" });
+ const [captchaValue, setCaptchaValue] = useState("");
+const [expectedCaptcha, setExpectedCaptcha] = useState(""); // 1. Add state variable
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setStatus({ loading: true, success: null, message: "" });
 
-    try {
-      const response = await fetch(`${baseUrl}/submit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+  // 1. Local CAPTCHA Check (Case Insensitive & Trimmed)
+  if (captchaValue.trim().toUpperCase() !== expectedCaptcha.toUpperCase()) {
+    setStatus({
+      loading: false,
+      success: false,
+      message: "Incorrect CAPTCHA code. Please try again.",
+    });
+    return;
+  }
 
-      if (response.ok) {
-        setStatus({
-          loading: false,
-          success: true,
-          message: "Thank you! Your message has been sent successfully.",
-        });
-        setFormData({
-          name: "",
-          email: "",
-          phone: "",
-          inquiryType: "Request Free Samples",
-          message: "",
-        });
-      } else {
-        throw new Error("Failed to submit the form. Please try again.");
-      }
-    } catch (err: any) {
+  try {
+    const response = await fetch(`${baseUrl}/submit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        ...formData,
+        captcha: captchaValue,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
       setStatus({
         loading: false,
-        success: false,
-        message: err.message || "An error occurred while submitting.",
+        success: true,
+        message: data.message,
       });
+      // Clear Form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        inquiryType: "Request Free Samples",
+        message: "",
+      });
+      setCaptchaValue("");
+      // Logic inside Captcha component handles refreshing the code via onGenerate
+    } else {
+      throw new Error(data.message || "Something went wrong.");
     }
-  };
-
+  } catch (err: any) {
+    setStatus({
+      loading: false,
+      success: false,
+      message: err.message,
+    });
+  }
+};
   return (
     <main className="flex flex-col flex-1 pt-14 md:pt-24 bg-white text-zinc-950">
       {/* Hero Banner Component */}
@@ -266,21 +295,68 @@ const baseUrl = process.env.NEXT_PUBLIC_API_URL;
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-zinc-800 mb-2 uppercase tracking-wide">
-                      Inquiry Type
-                    </label>
-                    <select
-                      name="inquiryType"
-                      value={formData.inquiryType}
-                      onChange={handleChange}
-                      className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-3.5 text-base font-semibold text-zinc-900 focus:outline-none focus:border-brand-green transition-colors"
-                    >
-                      <option value="Request Free Samples">Request Free Samples</option>
-                      <option value="Wholesale & Bulk Orders">Wholesale & Bulk Orders</option>
-                      <option value="Custom Mesh & Thickness">Custom Mesh & Thickness</option>
-                      <option value="General Question">General Question</option>
-                    </select>
-                  </div>
+  <label className="block text-sm font-semibold text-zinc-800 mb-2 uppercase tracking-wide">
+    Inquiry Type
+  </label>
+
+  <div className="relative">
+    {/* Selected value */}
+    <button
+      type="button"
+      onClick={() => setDropdownOpen(!dropdownOpen)}
+      className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-3.5 text-left text-base font-semibold text-zinc-900 focus:outline-none focus:border-brand-green transition-all cursor-pointer flex items-center justify-between"
+    >
+      <span>{formData.inquiryType}</span>
+
+      <svg
+        className={`w-5 h-5 text-zinc-500 transition-transform duration-200 ${
+          dropdownOpen ? "rotate-180" : ""
+        }`}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="m6 9 6 6 6-6"
+        />
+      </svg>
+    </button>
+
+    {/* Options */}
+    {dropdownOpen && (
+      <div className="absolute z-50 left-0 right-0 mt-2 bg-white border border-zinc-200 rounded-2xl shadow-lg overflow-hidden">
+        <div className="h-1 bg-yellow-400" />
+
+        <div className="py-2">
+          {inquiryOptions.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => {
+                setFormData((prev) => ({
+                  ...prev,
+                  inquiryType: option,
+                }));
+
+                setDropdownOpen(false);
+              }}
+              className={`w-full text-left px-5 py-4 text-sm font-bold transition-colors ${
+                formData.inquiryType === option
+                  ? "text-brand-green bg-green-50"
+                  : "text-brand-green hover:bg-zinc-50"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+</div>
                 </div>
 
                 <div>
@@ -297,7 +373,11 @@ const baseUrl = process.env.NEXT_PUBLIC_API_URL;
                     className="w-full bg-white border border-zinc-200 rounded-2xl p-5 text-base font-semibold text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-brand-green transition-colors resize-y"
                   />
                 </div>
-
+<Captcha
+  value={captchaValue}
+  onChange={setCaptchaValue}
+  onGenerate={setExpectedCaptcha} // 3. Store generated value in parent
+/>
                 {status.message && (
                   <p className={`text-sm font-semibold ${status.success ? "text-green-600" : "text-red-600"}`}>
                     {status.message}

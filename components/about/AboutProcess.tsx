@@ -23,7 +23,7 @@ export default function AboutProcess({data}:{data:any}) {
           <h2 className="font-flavours text-4xl md:text-5xl font-extrabold text-brand-green leading-tight mb-6">
         {data.sub}
           </h2>
-          <div className="text-lg text-zinc-700 leading-relaxed mb-6 font-medium" dangerouslySetInnerHTML={{__html:data.content}} />
+          <div className="text-lg text-zinc-700 leading-relaxed mb-6 font-medium" dangerouslySetInnerHTML={{__html:data.content,}} />
         </div>
       </div>
     </section>

@@ -46,7 +46,7 @@ export default function PageHeroBanner({
           {title}
         </h1>
         {description && (
-          <div className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg lg:text-xl font-medium text-white/90 max-w-2xl mx-auto leading-relaxed"dangerouslySetInnerHTML={{ __html:description }}/>
+          <div className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg lg:text-xl font-medium text-white/90 max-w-2xl mx-auto leading-relaxed"dangerouslySetInnerHTML={{ __html:description, }}/>
         )}
         {children}
       </div>

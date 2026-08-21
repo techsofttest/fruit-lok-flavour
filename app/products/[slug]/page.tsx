@@ -160,6 +160,7 @@ export default async function Page({ params }: PageProps) {
    
          {/* Wave Transition */}
          <SectionWaveDivider fill="#218018" overlap={60} />
+         
        </main>
   );
 }

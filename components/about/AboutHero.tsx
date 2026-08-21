@@ -43,7 +43,7 @@ export default function AboutHero({banner}:{banner:any}) {
         <h1 className="font-flavours text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight mb-4 sm:mb-6 drop-shadow-sm leading-tight">
          {banner.sub}
         </h1>
-        <div className="text-base sm:text-xl md:text-2xl font-semibold max-w-3xl mx-auto leading-relaxed" dangerouslySetInnerHTML={{__html:banner.content}} />
+        <div className="text-base sm:text-xl md:text-2xl font-semibold max-w-3xl mx-auto leading-relaxed" dangerouslySetInnerHTML={{__html:banner.content,}} />
       </div>
     </section>
   );

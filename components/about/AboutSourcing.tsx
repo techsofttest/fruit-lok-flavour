@@ -24,7 +24,7 @@ export default function AboutSourcing({source}:{source:any}) {
           <h2 className="font-flavours text-4xl md:text-5xl font-extrabold text-brand-green leading-tight mb-6">
            {source.sub}
           </h2>
-          <div className="text-lg text-zinc-700 leading-relaxed mb-6 font-medium" dangerouslySetInnerHTML={{__html:source.content}}/>
+          <div className="text-lg text-zinc-700 leading-relaxed mb-6 font-medium" dangerouslySetInnerHTML={{__html:source.content,}}/>
         </div>
       </div>
     </section>

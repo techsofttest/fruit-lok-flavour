@@ -24,7 +24,7 @@ export default function CTASection({ cta }: { cta: any }) {
 
       {/* Title & Button Content */}
       <div className="relative z-20 text-center px-4 sm:px-6 max-w-4xl flex flex-col items-center gap-3 sm:gap-6 md:gap-8">
-        <div className="font-flavours text-2xl sm:text-4xl md:text-5xl font-extrabold text-brand-green leading-tight" dangerouslySetInnerHTML={{ __html: cta.content }} />
+        <div className="font-flavours text-2xl sm:text-4xl md:text-5xl font-extrabold text-brand-green leading-tight" dangerouslySetInnerHTML={{ __html: cta.content, }} />
         <Link href="/contact" className="inline-block">
           <JackfruitButton
             id="cta-button"

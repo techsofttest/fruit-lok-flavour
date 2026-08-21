@@ -43,7 +43,7 @@ export default function JackfruitFeature({page}:{page:any}) {
           <div className="w-[35%] shrink-0" />
 
           <div className="flex-1 flex flex-col items-center text-center px-8 md:px-12">
-            <div className="font-flavours text-3xl md:text-4xl font-extrabold text-white leading-tight mb-8 max-w-lg" dangerouslySetInnerHTML={{ __html:page.content  }}/>
+            <div className="font-flavours text-3xl md:text-4xl font-extrabold text-white leading-tight mb-8 max-w-lg" dangerouslySetInnerHTML={{ __html:page.content,  }}/>
             <Link href="/products" className="inline-block">
             <JackfruitButton
               id="jackfruit-cta-btn-desktop"
@@ -73,7 +73,7 @@ export default function JackfruitFeature({page}:{page:any}) {
 
         {/* Content Below Jackfruit */}
         <div className="w-full max-w-md flex flex-col items-center text-center space-y-6 pt-2">
-          <div className="font-flavours text-xl sm:text-2xl font-extrabold text-white leading-relaxed"dangerouslySetInnerHTML={{ __html:page.content  }}/>
+          <div className="font-flavours text-xl sm:text-2xl font-extrabold text-white leading-relaxed"dangerouslySetInnerHTML={{ __html:page.content,  }}/>
            <Link href="/products" className="inline-block">
           <JackfruitButton
             id="jackfruit-cta-btn-mobile"

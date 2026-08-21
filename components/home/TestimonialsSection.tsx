@@ -107,13 +107,13 @@ export default function TestimonialsSection({review}:{review:any[]}) {
   [&_p]:leading-relaxed
   [&_p]:italic
 "
-dangerouslySetInnerHTML={{ __html:current.description}} />
+dangerouslySetInnerHTML={{ __html:current.description,}} />
             {/* Author */}
             <div className="flex flex-col">
               <p className="font-flavours text-brand-yellow text-xl sm:text-2xl font-bold">
                 — {current.name}
               </p>
-              <p className="text-white text-xs sm:text-base mt-0.5">{current.role}</p>
+              <p className="text-white text-xs sm:text-base mt-0.5">{current.designation}</p>
             </div>
           </div>
         </div>

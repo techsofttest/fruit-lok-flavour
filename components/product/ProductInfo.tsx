@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import JackfruitButton from "@/components/ui/JackfruitButton";
+  import BookingModal from "@/components/ui/BookingModal";
 
 interface ProductDetailItem {
   product: {
@@ -36,6 +37,11 @@ interface ProductDetailItem {
 }
 
 export default function ProductInfo({ product }: ProductDetailItem) {
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
+const [selectedSample, setSelectedSample] = useState<{
+  id: number;
+  name: string;
+} | null>(null);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     0: true,
   });
@@ -240,16 +246,30 @@ export default function ProductInfo({ product }: ProductDetailItem) {
       {/* B2B Call to Action */}
       <div className="bg-brand-green/5 border border-brand-green/15 rounded-[2rem] p-6">
         <div className="flex flex-col sm:flex-row items-center gap-6">
-          <Link href="/contact" className="inline-block">
-            <JackfruitButton variant="filled" className="whitespace-nowrap w-full sm:w-auto">
+
+            <JackfruitButton onClick={() => {
+    setSelectedSample({
+      id: product.id,
+      name: product.name,
+    });
+
+    setIsBookingOpen(true);
+  }} variant="filled" className="whitespace-nowrap w-full sm:w-auto">
               Request Samples
             </JackfruitButton>
-          </Link>
+
           <p className="text-sm font-bold text-brand-green max-w-sm leading-relaxed">
             *Free sample batches are available for registered food manufacturers and wholesale brands.
           </p>
         </div>
       </div>
+              <BookingModal
+  isOpen={isBookingOpen}
+  onClose={() => setIsBookingOpen(false)}
+  sampleId={selectedSample?.id}
+  sampleName={selectedSample?.name}
+/>
     </div>
+    
   );
 }

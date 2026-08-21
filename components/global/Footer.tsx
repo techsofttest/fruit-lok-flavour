@@ -136,6 +136,9 @@ export default function Footer({contact,product}:{contact:any,product:any[]}) {
       <div className="border-t border-white/20 py-8 bg-zinc-950/20">
         <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white font-semibold">
           <p>© {new Date().getFullYear()} Fruitlok Flavours. All rights reserved.</p>
+           <a href="https://www.techsoftweb.com" target="_blank" className="text-gray-300 hover:text-[#E4B401] transition-colors">
+                web design company kerala - techsoft
+            </a>
           <div className="flex items-center gap-2">
             <span className="text-white">From the Heart of Kerala</span>
           </div>

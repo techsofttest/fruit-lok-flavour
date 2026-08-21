@@ -38,7 +38,7 @@ export default function WhyUsSection({partner}:{partner:any[]}) {
                 <h3 className="font-flavours text-3xl font-bold mb-4 text-brand-green">
                   {reason.title}
                 </h3>
-                <div className="text-lg text-brand-green leading-relaxed" dangerouslySetInnerHTML={{ __html:reason.desc}} />
+                <div className="text-lg text-brand-green leading-relaxed" dangerouslySetInnerHTML={{ __html:reason.desc,}} />
               </div>
             </div>
           ))}
