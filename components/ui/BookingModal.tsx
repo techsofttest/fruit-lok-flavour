@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -26,18 +26,29 @@ export default function BookingModal({
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  // Inside handleSubmit in BookingModal.tsx
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      // FIX: Changed endpoint from /send to /submit to match your route snippet
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/send`, 
+        `${process.env.NEXT_PUBLIC_API_URL}/send`,
         {
           method: "POST",
           headers: {
@@ -49,10 +60,10 @@ const handleSubmit = async (e: React.FormEvent) => {
             email: form.email,
             phone: form.phone,
             message: form.message,
-            requestType: "Request Sample", // Matches $isSampleRequest logic in PHP
-            sampleId: sampleId ? String(sampleId) : "", 
+            requestType: "Request Sample",
+            sampleId: sampleId ? String(sampleId) : "",
             sampleName: sampleName,
-            inquiryType: "Sample Request" // Fallback for the subject line
+            inquiryType: "Sample Request",
           }),
         }
       );
@@ -61,7 +72,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       if (response.ok && result.success) {
         setSubmitted(true);
-        // ... rest of your success logic
       } else {
         setError(result.message || "Failed to send request.");
       }
@@ -70,17 +80,14 @@ const handleSubmit = async (e: React.FormEvent) => {
     } finally {
       setLoading(false);
     }
-};
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
-
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Modal */}
+      {/* Modal Container - Max height with scroll restricted inside modal */}
       <div
         className="
           relative z-10
@@ -97,7 +104,6 @@ const handleSubmit = async (e: React.FormEvent) => {
           rounded-3xl
         "
       >
-
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -120,7 +126,6 @@ const handleSubmit = async (e: React.FormEvent) => {
         {submitted ? (
           /* Success */
           <div className="flex flex-col items-center justify-center py-12 text-center">
-
             <div
               className="
                 w-14 h-14
@@ -158,18 +163,14 @@ const handleSubmit = async (e: React.FormEvent) => {
             {sampleName && (
               <p className="mt-4 text-sm font-semibold text-zinc-800">
                 Requested Sample:{" "}
-                <span className="text-brand-green">
-                  {sampleName}
-                </span>
+                <span className="text-brand-green">{sampleName}</span>
               </p>
             )}
           </div>
         ) : (
           <div>
-
             {/* Header */}
             <div className="mb-8 border-b border-brand-green/15 pb-5">
-
               <span
                 className="
                   inline-flex
@@ -203,66 +204,18 @@ const handleSubmit = async (e: React.FormEvent) => {
               </p>
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-5"
-            >
-
-              {/* Selected Sample */}
-              {sampleName && (
-                <div
-                  className="
-                    bg-brand-green/5
-                    border border-brand-green/20
-                    px-5 py-4
-                    rounded-2xl
-                  "
-                >
-                  <p
-                    className="
-                      text-[10px]
-                      font-bold
-                      uppercase
-                      tracking-[0.15em]
-                      text-brand-green
-                      mb-1
-                    "
-                  >
-                    Selected Sample
-                  </p>
-
-                  <p className="text-base font-bold text-zinc-900">
-                    {sampleName}
-                  </p>
-
-                  {sampleId && (
-                    <p className="text-[11px] text-zinc-400 mt-1">
-                      Sample ID: {sampleId}
-                    </p>
-                  )}
-                </div>
-              )}
+            <form onSubmit={handleSubmit} className="space-y-5">
 
               {/* Name */}
               <div>
                 <label
-                  className="
-                    block
-                    text-xs
-                    font-bold
-                    uppercase
-                    tracking-wider
-                    mb-2
-                    text-zinc-700
-                  "
-                >
+                  className="  block text-xs font-bold uppercase  tracking-wider  mb-2 text-zinc-700 ">
                   Full Name
                 </label>
 
                 <input
                   type="text"
-                  required
-                  value={form.name}
+                  required value={form.name}
                   onChange={(e) =>
                     setForm({
                       ...form,
@@ -290,7 +243,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
               {/* Email + Phone */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
                 <div>
                   <label
                     className="
@@ -378,7 +330,6 @@ const handleSubmit = async (e: React.FormEvent) => {
                     "
                   />
                 </div>
-
               </div>
 
               {/* Sample */}
@@ -478,7 +429,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
               {/* Submit */}
               <div className="pt-2">
-
                 <button
                   type="submit"
                   disabled={loading}
@@ -502,17 +452,13 @@ const handleSubmit = async (e: React.FormEvent) => {
                     disabled:hover:translate-y-0
                   "
                 >
-                  {loading
-                    ? "Sending Request..."
-                    : "Request Free Sample"}
+                  {loading ? "Sending Request..." : "Request Free Sample"}
                 </button>
 
                 <p className="text-center text-[11px] text-zinc-400 mt-3">
                   Our team will contact you regarding your sample request.
                 </p>
-
               </div>
-
             </form>
           </div>
         )}
