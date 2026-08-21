@@ -21,6 +21,8 @@ interface ProductResponse {
     color: string;
     image: string;
     imgalt: string;
+    productid: string;
+     name: string;
   }[],
   product:  {
     id: number;

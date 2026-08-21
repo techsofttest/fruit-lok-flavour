@@ -5,13 +5,17 @@ import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import JackfruitButton from "@/components/ui/JackfruitButton";
 import Link from "next/link";
-
+  import BookingModal from "@/components/ui/BookingModal";
 const INTERVAL = 4500; // ms per slide
 
 export default function HeroSection({banner}:{banner:any[]}) {
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
-
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
+const [selectedSample, setSelectedSample] = useState<{
+  id: number;
+  name: string;
+} | null>(null);
   const goTo = useCallback(
     (idx: number) => {
       if (animating) return;
@@ -96,8 +100,8 @@ export default function HeroSection({banner}:{banner:any[]}) {
             <div className="text-sm sm:text-base md:text-lg text-white/90 font-semibold tracking-wide max-w-xs sm:max-w-md drop-shadow" dangerouslySetInnerHTML={{__html:product.content ??""}}/>
             {/* CTA */}
             <div className="mt-1 md:mt-2">
-               <Link href="/contact" className="inline-block">
-              <JackfruitButton
+               {/* <Link href={`/products/${product.href}`} className="inline-block"> */}
+              <JackfruitButton onClick={() => {setSelectedSample({id: product.productid, name: product.name,});setIsBookingOpen(true);}}
                 id={`hero-cta-${product.id}`}
                 variant="filled"
                 size="sm"
@@ -105,7 +109,8 @@ export default function HeroSection({banner}:{banner:any[]}) {
                 textClass="text-white text-sm sm:text-base font-semibold"
               >
                 Request a Sample
-              </JackfruitButton></Link>
+              </JackfruitButton>
+              {/* </Link> */}
             </div>
           </div>
 
@@ -161,6 +166,12 @@ export default function HeroSection({banner}:{banner:any[]}) {
           </span>
         </button>
       </div>
+                <BookingModal
+        isOpen={isBookingOpen}
+        onClose={() => setIsBookingOpen(false)}
+        sampleId={selectedSample?.id}
+        sampleName={selectedSample?.name}
+      />
     </section>
   );
 }
