@@ -10,28 +10,16 @@ interface BookingModalProps {
   sampleName?: string;
 }
 
-const COUNTRY_CODES = [
-  { code: "+971", country: "UAE", flag: "🇦🇪", digits: 9 },
-  { code: "+91", country: "IN", flag: "🇮🇳", digits: 10 },
-  { code: "+1", country: "US/CA", flag: "🇺🇸", digits: 10 },
-  { code: "+44", country: "UK", flag: "🇬🇧", digits: 10 },
-  { code: "+966", country: "SA", flag: "🇸🇦", digits: 9 },
-  { code: "+64", country: "NZ", flag: "🇳🇿", digits: 9 },
-];
-
 export default function BookingModal({
   isOpen,
   onClose,
   sampleId,
   sampleName,
 }: BookingModalProps) {
-  const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
-
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
-    countryCode: COUNTRY_CODES[0].code,
     message: "",
   });
 
@@ -41,15 +29,6 @@ export default function BookingModal({
 
   const [captchaValue, setCaptchaValue] = useState("");
   const [expectedCaptcha, setExpectedCaptcha] = useState("");
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    setForm((prev) => ({
-      ...prev,
-      phone: value,
-      countryCode: selectedCountry.code,
-    }));
-  };
 
   // Prevent background scrolling when modal is open
   useEffect(() => {
@@ -90,14 +69,14 @@ export default function BookingModal({
           body: JSON.stringify({
             name: form.name,
             email: form.email,
-            phone: `${selectedCountry.code} ${form.phone}`,
+            phone: form.phone,
             message: form.message,
             requestType: "Request Sample",
             sampleId: sampleId ? String(sampleId) : "",
             sampleName: sampleName,
             inquiryType: "Sample Request",
             captchaInput: captchaValue,
-            expectedCaptcha: expectedCaptcha,
+          expectedCaptcha: expectedCaptcha,
           }),
         }
       );
@@ -312,50 +291,37 @@ export default function BookingModal({
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-zinc-700">
-                    Phone Number *
+                    Phone Number
                   </label>
-                  <div className="flex gap-2">
-                    <div className="relative">
-                      <select
-                        value={selectedCountry.code}
-                        onChange={(e) => {
-                          const country = COUNTRY_CODES.find(
-                            (c) => c.code === e.target.value
-                          );
-                          if (country) {
-                            setSelectedCountry(country);
-                            setForm((prev) => ({
-                              ...prev,
-                              countryCode: country.code,
-                            }));
-                          }
-                        }}
-                        className="h-full bg-white border border-zinc-200 rounded-xl px-2.5 py-3 text-xs font-semibold text-zinc-900 focus:outline-none focus:border-brand-green transition-colors cursor-pointer appearance-none pr-7"
-                      >
-                        {COUNTRY_CODES.map((c) => (
-                          <option key={c.code} value={c.code}>
-                            {c.flag} {c.code}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-zinc-500 text-[10px]">
-                        ▼
-                      </div>
-                    </div>
 
-                    <input
-                      type="tel"
-                      name="phone"
-                      required
-                      pattern={`[0-9]{${selectedCountry.digits}}`}
-                      title={`Please enter a valid ${selectedCountry.digits}-digit phone number`}
-                      value={form.phone}
-                      onChange={handlePhoneChange}
-                      maxLength={selectedCountry.digits}
-                      placeholder="501234567"
-                      className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/10 transition-all"
-                    />
-                  </div>
+                  <input
+                    type="tel"
+                      placeholder="+91 98765 43210"
+                    pattern="^\+[1-9][0-9]{7,14}$"
+                    required
+                    value={form.phone}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        phone: e.target.value,
+                      })
+                    }
+                    className="
+                      w-full
+                      bg-white
+                      border border-zinc-200
+                      rounded-xl
+                      px-4 py-3
+                      text-sm
+                      text-zinc-900
+                      placeholder:text-zinc-400
+                      focus:outline-none
+                      focus:border-brand-green
+                      focus:ring-2
+                      focus:ring-brand-green/10
+                      transition-all
+                    "
+                  />
                 </div>
               </div>
 
@@ -459,6 +425,7 @@ export default function BookingModal({
                 >
                   {loading ? "Sending Request..." : "Request Free Sample"}
                 </button>
+
               </div>
             </form>
           </div>

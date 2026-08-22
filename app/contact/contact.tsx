@@ -7,39 +7,19 @@ import JackfruitButton from "@/components/ui/JackfruitButton";
 import PageHeroBanner from "@/components/global/PageHeroBanner";
 import Captcha from "./Captcha";
 
-const COUNTRY_CODES = [
-  { code: "+971", country: "UAE", flag: "🇦🇪", digits: 9 },
-  { code: "+91", country: "IN", flag: "🇮🇳", digits: 10 },
-  { code: "+1", country: "US/CA", flag: "🇺🇸", digits: 10 },
-  { code: "+44", country: "UK", flag: "🇬🇧", digits: 10 },
-  { code: "+966", country: "SA", flag: "🇸🇦", digits: 9 },
-  { code: "+64", country: "NZ", flag: "🇳🇿", digits: 9 },
-];
-
-const INQUIRY_OPTIONS = [
+export default function ContactPage({ banner, contact, page }: { banner: any; contact: any; page: any }) {
+  const inquiryOptions = [
   "Request Free Samples",
   "Wholesale & Bulk Orders",
   "Custom Mesh & Thickness",
   "General Question",
 ];
 
-export default function ContactPage({
-  banner,
-  contact,
-  page,
-}: {
-  banner: any;
-  contact: any;
-  page: any;
-}) {
-  const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-
+const [dropdownOpen, setDropdownOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    countryCode: COUNTRY_CODES[0].code,
     inquiryType: "Request Free Samples",
     message: "",
   });
@@ -54,92 +34,69 @@ export default function ContactPage({
     message: "",
   });
 
-  const [captchaValue, setCaptchaValue] = useState("");
-  const [expectedCaptcha, setExpectedCaptcha] = useState("");
-
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+ const [captchaValue, setCaptchaValue] = useState("");
+const [expectedCaptcha, setExpectedCaptcha] = useState(""); // 1. Add state variable
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setStatus({ loading: true, success: null, message: "" });
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    setFormData((prev) => ({
-      ...prev,
-      phone: value,
-      countryCode: selectedCountry.code,
-    }));
-  };
+  // 1. Local CAPTCHA Check (Case Insensitive & Trimmed)
+  if (captchaValue.trim().toUpperCase() !== expectedCaptcha.toUpperCase()) {
+    setStatus({
+      loading: false,
+      success: false,
+      message: "Incorrect CAPTCHA code. Please try again.",
+    });
+    return;
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setStatus({ loading: true, success: null, message: "" });
+  try {
+    const response = await fetch(`${baseUrl}/submit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        ...formData,
+        captcha: captchaValue,
+      }),
+    });
 
-    // Client-side CAPTCHA Validation
-    if (captchaValue.trim().toUpperCase() !== expectedCaptcha.toUpperCase()) {
+    const data = await response.json();
+
+    if (response.ok && data.success) {
       setStatus({
         loading: false,
-        success: false,
-        message: "Incorrect CAPTCHA code. Please try again.",
+        success: true,
+        message: data.message,
       });
-      return;
+      // Clear Form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        inquiryType: "Request Free Samples",
+        message: "",
+      });
+      setCaptchaValue("");
+      // Logic inside Captcha component handles refreshing the code via onGenerate
+    } else {
+      throw new Error(data.message || "Something went wrong.");
     }
-
-    try {
-      const response = await fetch(`${baseUrl}/submit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: `${selectedCountry.code} ${formData.phone}`,
-          inquiryType: formData.inquiryType,
-          message: formData.message,
-          captchaInput: captchaValue,
-          expectedCaptcha: expectedCaptcha,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setStatus({
-          loading: false,
-          success: true,
-          message: data.message || "Message sent successfully!",
-        });
-
-        // Reset form
-        setFormData({
-          name: "",
-          email: "",
-          phone: "",
-          countryCode: selectedCountry.code,
-          inquiryType: "Request Free Samples",
-          message: "",
-        });
-        setCaptchaValue("");
-      } else {
-        throw new Error(data.message || "Something went wrong.");
-      }
-    } catch (err: any) {
-      setStatus({
-        loading: false,
-        success: false,
-        message: err.message || "Network error. Please try again.",
-      });
-    }
-  };
-
+  } catch (err: any) {
+    setStatus({
+      loading: false,
+      success: false,
+      message: err.message,
+    });
+  }
+};
   return (
     <main className="flex flex-col flex-1 pt-14 md:pt-24 bg-white text-zinc-950">
       {/* Hero Banner Component */}
@@ -158,16 +115,9 @@ export default function ContactPage({
           {/* Left Column: Contact Details Text */}
           <div className="lg:col-span-6 space-y-8">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-brand-green mb-2">
-                {page.title}
-              </p>
-              <h2 className="font-flavours text-4xl md:text-5xl font-semibold text-brand-green leading-tight mb-4">
-                {page.sub}
-              </h2>
-              <div
-                className="text-zinc-700 font-medium text-lg leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: page.content }}
-              />
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-brand-green mb-2">{page.title}</p>
+              <h2 className="font-flavours text-4xl md:text-5xl font-semibold text-brand-green leading-tight mb-4">{page.sub}</h2>
+              <div className="text-zinc-700 font-medium text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: page.content }} />
             </div>
 
             {/* Direct Contact Items */}
@@ -175,52 +125,24 @@ export default function ContactPage({
               {/* Address */}
               <div className="flex items-start gap-5">
                 <div className="w-12 h-12 rounded-2xl bg-brand-green/10 text-brand-green flex items-center justify-center flex-shrink-0 mt-1">
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
                 <div>
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-green mb-1">
                     Company Address
                   </h3>
-                  <div
-                    className="text-zinc-900 font-semibold text-lg leading-snug [&_p_strong]:hidden"
-                    dangerouslySetInnerHTML={{ __html: contact.address }}
-                  />
+                  <div className="text-zinc-900 font-semibold text-lg leading-snug [&_p_strong]:hidden" dangerouslySetInnerHTML={{ __html: contact.address }} />
                 </div>
               </div>
 
               {/* Phone Support */}
               <div className="flex items-start gap-5">
                 <div className="w-12 h-12 rounded-2xl bg-brand-green/10 text-brand-green flex items-center justify-center flex-shrink-0 mt-1">
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                    />
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                 </div>
                 <div>
@@ -229,22 +151,10 @@ export default function ContactPage({
                   </h3>
                   <div className="space-y-1">
                     <p className="text-zinc-900 font-semibold text-lg">
-                      International:{" "}
-                      <a
-                        href={`tel:${contact.phone}`}
-                        className="text-brand-green hover:underline font-semibold"
-                      >
-                        {contact.phone}
-                      </a>
+                      International: <a href={`tel:${contact.phone}`} className="text-brand-green hover:underline font-semibold">{contact.phone}</a>
                     </p>
                     <p className="text-zinc-900 font-semibold text-lg">
-                      India Office:{" "}
-                      <a
-                        href={`tel:${contact.phone2}`}
-                        className="text-brand-green hover:underline font-semibold"
-                      >
-                        {contact.phone2}
-                      </a>
+                      India Office: <a href={`tel:${contact.phone2}`} className="text-brand-green hover:underline font-semibold">{contact.phone2}</a>
                     </p>
                   </div>
                 </div>
@@ -253,28 +163,15 @@ export default function ContactPage({
               {/* Email Address */}
               <div className="flex items-start gap-5">
                 <div className="w-12 h-12 rounded-2xl bg-brand-green/10 text-brand-green flex items-center justify-center flex-shrink-0 mt-1">
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
                 <div>
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-green mb-1">
                     Email Address
                   </h3>
-                  <a
-                    href={`mailto:${contact.email}`}
-                    className="text-zinc-900 font-semibold text-xl hover:text-brand-green transition-colors"
-                  >
+                  <a href={`mailto:${contact.email}`} className="text-zinc-900 font-semibold text-xl hover:text-brand-green transition-colors">
                     {contact.email}
                   </a>
                 </div>
@@ -347,8 +244,7 @@ export default function ContactPage({
                   Let’s Start A Conversation
                 </h2>
                 <p className="text-zinc-700 font-medium text-base leading-relaxed">
-                  Fill out the details below and our technical sales team will
-                  contact you within 24 hours.
+                  Fill out the details below and our technical sales team will contact you within 24 hours.
                 </p>
               </div>
 
@@ -385,113 +281,84 @@ export default function ContactPage({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Phone Number Input with Country Code */}
                   <div>
                     <label className="block text-sm font-semibold text-zinc-800 mb-2 uppercase tracking-wide">
-                      Phone Number *
+                      Phone Number
                     </label>
-                    <div className="flex gap-2">
-                      <div className="relative">
-                        <select
-                          value={selectedCountry.code}
-                          onChange={(e) => {
-                            const country = COUNTRY_CODES.find(
-                              (c) => c.code === e.target.value
-                            );
-                            if (country) {
-                              setSelectedCountry(country);
-                              setFormData((prev) => ({
-                                ...prev,
-                                countryCode: country.code,
-                              }));
-                            }
-                          }}
-                          className="h-full bg-white border border-zinc-200 rounded-2xl px-3 py-3.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-brand-green transition-colors cursor-pointer appearance-none pr-8"
-                        >
-                          {COUNTRY_CODES.map((c) => (
-                            <option key={c.code} value={c.code}>
-                              {c.flag} {c.code}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-zinc-500 text-xs">
-                          ▼
-                        </div>
-                      </div>
-
-                      <input
-                        type="tel"
-                        name="phone"
-                        required
-                        pattern={`[0-9]{${selectedCountry.digits}}`}
-                        title={`Please enter a valid ${selectedCountry.digits}-digit phone number`}
-                        value={formData.phone}
-                        onChange={handlePhoneChange}
-                        maxLength={selectedCountry.digits}
-                        placeholder="501234567"
-                        className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-3.5 text-base font-semibold text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-brand-green transition-colors"
-                      />
-                    </div>
+                    <input
+                      type="tel"
+                      name="phone"
+                      required
+                      placeholder="+91 98765 43210"
+                      pattern="^\+[1-9][0-9]{7,14}$"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-3.5 text-base font-semibold text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-brand-green transition-colors"
+                    />
                   </div>
-
-                  {/* Inquiry Type Dropdown */}
                   <div>
-                    <label className="block text-sm font-semibold text-zinc-800 mb-2 uppercase tracking-wide">
-                      Inquiry Type
-                    </label>
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setDropdownOpen(!dropdownOpen)}
-                        className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-3.5 text-left text-base font-semibold text-zinc-900 focus:outline-none focus:border-brand-green transition-all cursor-pointer flex items-center justify-between"
-                      >
-                        <span>{formData.inquiryType}</span>
-                        <svg
-                          className={`w-5 h-5 text-zinc-500 transition-transform duration-200 ${
-                            dropdownOpen ? "rotate-180" : ""
-                          }`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="m6 9 6 6 6-6"
-                          />
-                        </svg>
-                      </button>
+  <label className="block text-sm font-semibold text-zinc-800 mb-2 uppercase tracking-wide">
+    Inquiry Type
+  </label>
 
-                      {dropdownOpen && (
-                        <div className="absolute z-50 left-0 right-0 mt-2 bg-white border border-zinc-200 rounded-2xl shadow-lg overflow-hidden">
-                          <div className="h-1 bg-yellow-400" />
-                          <div className="py-2">
-                            {INQUIRY_OPTIONS.map((option) => (
-                              <button
-                                key={option}
-                                type="button"
-                                onClick={() => {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    inquiryType: option,
-                                  }));
-                                  setDropdownOpen(false);
-                                }}
-                                className={`w-full text-left px-5 py-4 text-sm font-bold transition-colors ${
-                                  formData.inquiryType === option
-                                    ? "text-brand-green bg-green-50"
-                                    : "text-brand-green hover:bg-zinc-50"
-                                }`}
-                              >
-                                {option}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+  <div className="relative">
+    {/* Selected value */}
+    <button
+      type="button"
+      onClick={() => setDropdownOpen(!dropdownOpen)}
+      className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-3.5 text-left text-base font-semibold text-zinc-900 focus:outline-none focus:border-brand-green transition-all cursor-pointer flex items-center justify-between"
+    >
+      <span>{formData.inquiryType}</span>
+
+      <svg
+        className={`w-5 h-5 text-zinc-500 transition-transform duration-200 ${
+          dropdownOpen ? "rotate-180" : ""
+        }`}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="m6 9 6 6 6-6"
+        />
+      </svg>
+    </button>
+
+    {/* Options */}
+    {dropdownOpen && (
+      <div className="absolute z-50 left-0 right-0 mt-2 bg-white border border-zinc-200 rounded-2xl shadow-lg overflow-hidden">
+        <div className="h-1 bg-yellow-400" />
+
+        <div className="py-2">
+          {inquiryOptions.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => {
+                setFormData((prev) => ({
+                  ...prev,
+                  inquiryType: option,
+                }));
+
+                setDropdownOpen(false);
+              }}
+              className={`w-full text-left px-5 py-4 text-sm font-bold transition-colors ${
+                formData.inquiryType === option
+                  ? "text-brand-green bg-green-50"
+                  : "text-brand-green hover:bg-zinc-50"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+</div>
                 </div>
 
                 <div>
@@ -508,19 +375,13 @@ export default function ContactPage({
                     className="w-full bg-white border border-zinc-200 rounded-2xl p-5 text-base font-semibold text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-brand-green transition-colors resize-y"
                   />
                 </div>
-
-                <Captcha
-                  value={captchaValue}
-                  onChange={setCaptchaValue}
-                  onGenerate={setExpectedCaptcha}
-                />
-
+<Captcha
+  value={captchaValue}
+  onChange={setCaptchaValue}
+  onGenerate={setExpectedCaptcha} // 3. Store generated value in parent
+/>
                 {status.message && (
-                  <p
-                    className={`text-sm font-semibold ${
-                      status.success ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
+                  <p className={`text-sm font-semibold ${status.success ? "text-green-600" : "text-red-600"}`}>
                     {status.message}
                   </p>
                 )}

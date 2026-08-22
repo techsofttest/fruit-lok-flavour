@@ -42,8 +42,7 @@ export default function BlogPage({ blog,cta }: DetailProps) {
             {blog.title || ""}
           </h1>
 
-          {/* Author Details */}
-          <div className="flex items-center gap-4 pt-4 border-t border-zinc-100">
+          {/* <div className="flex items-center gap-4 pt-4 border-t border-zinc-100">
             {blog.authorimg && (
             <div className="relative w-12 h-12 rounded-full overflow-hidden border border-zinc-200">
               <Image
@@ -62,7 +61,7 @@ export default function BlogPage({ blog,cta }: DetailProps) {
                 {blog.role}
               </p>)}
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Feature Cover Image */}{blog.image && (
