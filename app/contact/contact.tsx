@@ -14,8 +14,12 @@ export default function ContactPage({ banner, contact, page }: { banner: any; co
   "Custom Mesh & Thickness",
   "General Question",
 ];
+const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
-const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [captchaValue, setCaptchaValue] = useState("");
+  const [expectedCaptcha, setExpectedCaptcha] = useState("");
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -34,76 +38,81 @@ const [dropdownOpen, setDropdownOpen] = useState(false);
     message: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
- const [captchaValue, setCaptchaValue] = useState("");
-const [expectedCaptcha, setExpectedCaptcha] = useState(""); // 1. Add state variable
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setStatus({ loading: true, success: null, message: "" });
 
-  // 1. Local CAPTCHA Check (Case Insensitive & Trimmed)
-  if (captchaValue.trim().toUpperCase() !== expectedCaptcha.toUpperCase()) {
-    setStatus({
-      loading: false,
-      success: false,
-      message: "Incorrect CAPTCHA code. Please try again.",
-    });
-    return;
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus({ loading: true, success: null, message: "" });
 
-  try {
-    const response = await fetch(`${baseUrl}/submit`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-      },
-      body: JSON.stringify({
-        ...formData,
-        captcha: captchaValue,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok && data.success) {
+    // 1. Local CAPTCHA Check (Case Insensitive & Trimmed)
+    if (captchaValue.trim().toUpperCase() !== expectedCaptcha.toUpperCase()) {
       setStatus({
         loading: false,
-        success: true,
-        message: data.message,
+        success: false,
+        message: "Incorrect CAPTCHA code. Please try again.",
       });
-      // Clear Form
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        inquiryType: "Request Free Samples",
-        message: "",
-      });
-      setCaptchaValue("");
-      // Logic inside Captcha component handles refreshing the code via onGenerate
-    } else {
-      throw new Error(data.message || "Something went wrong.");
+      return;
     }
-  } catch (err: any) {
-    setStatus({
-      loading: false,
-      success: false,
-      message: err.message,
-    });
-  }
-};
+
+    try {
+      const response = await fetch(`${baseUrl}/submit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          inquiryType: formData.inquiryType,
+          message: formData.message,
+          captchaInput: captchaValue,
+          expectedCaptcha: expectedCaptcha,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setStatus({
+          loading: false,
+          success: true,
+          message: data.message || "Message sent successfully!",
+        });
+        // Clear Form
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          inquiryType: "Request Free Samples",
+          message: "",
+        });
+        setCaptchaValue("");
+      } else {
+        throw new Error(data.message || "Something went wrong.");
+      }
+    } catch (err: any) {
+      setStatus({
+        loading: false,
+        success: false,
+        message: err.message || "Network error. Please try again.",
+      });
+    }
+  };
+
   return (
     <main className="flex flex-col flex-1 pt-14 md:pt-24 bg-white text-zinc-950">
       {/* Hero Banner Component */}
       <PageHeroBanner
-        tagline={banner.title ?? ""}
-        title={banner.sub ?? ""}
-        description={banner.content ?? ""}
+        tagline={banner?.title ?? ""}
+        title={banner?.sub ?? ""}
+        description={banner?.content ?? ""}
       />
 
       {/* Organic Wave Divider */}
@@ -115,9 +124,16 @@ const handleSubmit = async (e: React.FormEvent) => {
           {/* Left Column: Contact Details Text */}
           <div className="lg:col-span-6 space-y-8">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-brand-green mb-2">{page.title}</p>
-              <h2 className="font-flavours text-4xl md:text-5xl font-semibold text-brand-green leading-tight mb-4">{page.sub}</h2>
-              <div className="text-zinc-700 font-medium text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: page.content }} />
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-brand-green mb-2">
+                {page?.title}
+              </p>
+              <h2 className="font-flavours text-4xl md:text-5xl font-semibold text-brand-green leading-tight mb-4">
+                {page?.sub}
+              </h2>
+              <div
+                className="text-zinc-700 font-medium text-lg leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: page?.content || "" }}
+              />
             </div>
 
             {/* Direct Contact Items */}
@@ -134,7 +150,10 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-green mb-1">
                     Company Address
                   </h3>
-                  <div className="text-zinc-900 font-semibold text-lg leading-snug [&_p_strong]:hidden" dangerouslySetInnerHTML={{ __html: contact.address }} />
+                  <div
+                    className="text-zinc-900 font-semibold text-lg leading-snug [&_p_strong]:hidden"
+                    dangerouslySetInnerHTML={{ __html: contact?.address || "" }}
+                  />
                 </div>
               </div>
 
@@ -151,10 +170,16 @@ const handleSubmit = async (e: React.FormEvent) => {
                   </h3>
                   <div className="space-y-1">
                     <p className="text-zinc-900 font-semibold text-lg">
-                      International: <a href={`tel:${contact.phone}`} className="text-brand-green hover:underline font-semibold">{contact.phone}</a>
+                      International:{" "}
+                      <a href={`tel:${contact?.phone}`} className="text-brand-green hover:underline font-semibold">
+                        {contact?.phone}
+                      </a>
                     </p>
                     <p className="text-zinc-900 font-semibold text-lg">
-                      India Office: <a href={`tel:${contact.phone2}`} className="text-brand-green hover:underline font-semibold">{contact.phone2}</a>
+                      India Office:{" "}
+                      <a href={`tel:${contact?.phone2}`} className="text-brand-green hover:underline font-semibold">
+                        {contact?.phone2}
+                      </a>
                     </p>
                   </div>
                 </div>
@@ -171,8 +196,8 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-green mb-1">
                     Email Address
                   </h3>
-                  <a href={`mailto:${contact.email}`} className="text-zinc-900 font-semibold text-xl hover:text-brand-green transition-colors">
-                    {contact.email}
+                  <a href={`mailto:${contact?.email}`} className="text-zinc-900 font-semibold text-xl hover:text-brand-green transition-colors">
+                    {contact?.email}
                   </a>
                 </div>
               </div>
@@ -181,13 +206,15 @@ const handleSubmit = async (e: React.FormEvent) => {
 
           {/* Right Column: Section Image */}
           <div className="lg:col-span-6 relative h-[500px] md:h-[600px] lg:h-[650px] w-full overflow-hidden rotate-2 hover:rotate-0 transition-transform duration-300">
-            <Image
-              src={page.image}
-              alt="Fruitlok Flavours Facilities and Fruit Sourcing"
-              fill
-              className="object-cover object-center"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
+            {page?.image && (
+              <Image
+                src={page.image}
+                alt="Fruitlok Flavours Facilities and Fruit Sourcing"
+                fill
+                className="object-cover object-center"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            )}
           </div>
         </div>
       </section>
@@ -205,16 +232,18 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
 
           <div className="w-full h-[380px] md:h-[480px] rounded-[2.5rem] overflow-hidden border border-zinc-200">
-            <iframe
-              title="Fruitlok Flavours Location Map"
-              src={contact.map}
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen={false}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+            {contact?.map && (
+              <iframe
+                title="Fruitlok Flavours Location Map"
+                src={contact.map}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={false}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            )}
           </div>
         </div>
       </section>
@@ -290,75 +319,83 @@ const handleSubmit = async (e: React.FormEvent) => {
                       name="phone"
                       required
                       placeholder="+91 98765 43210"
-                      pattern="^\+[1-9][0-9]{7,14}$"
                       value={formData.phone}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        let value = e.target.value;
+                        value = value.replace(/[^0-9+]/g, "");
+                        if (value.includes("+")) {
+                          value = "+" + value.replace(/\+/g, "");
+                        }
+                        if (value.startsWith("+")) {
+                          value = "+" + value.substring(1).slice(0, 15);
+                        }
+                        setFormData({
+                          ...formData,
+                          phone: value,
+                        });
+                      }}
                       className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-3.5 text-base font-semibold text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-brand-green transition-colors"
                     />
                   </div>
+
                   <div>
-  <label className="block text-sm font-semibold text-zinc-800 mb-2 uppercase tracking-wide">
-    Inquiry Type
-  </label>
+                    <label className="block text-sm font-semibold text-zinc-800 mb-2 uppercase tracking-wide">
+                      Inquiry Type
+                    </label>
 
-  <div className="relative">
-    {/* Selected value */}
-    <button
-      type="button"
-      onClick={() => setDropdownOpen(!dropdownOpen)}
-      className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-3.5 text-left text-base font-semibold text-zinc-900 focus:outline-none focus:border-brand-green transition-all cursor-pointer flex items-center justify-between"
-    >
-      <span>{formData.inquiryType}</span>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-3.5 text-left text-base font-semibold text-zinc-900 focus:outline-none focus:border-brand-green transition-all cursor-pointer flex items-center justify-between"
+                      >
+                        <span>{formData.inquiryType}</span>
+                        <svg
+                          className={`w-5 h-5 text-zinc-500 transition-transform duration-200 ${
+                            dropdownOpen ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="m6 9 6 6 6-6"
+                          />
+                        </svg>
+                      </button>
 
-      <svg
-        className={`w-5 h-5 text-zinc-500 transition-transform duration-200 ${
-          dropdownOpen ? "rotate-180" : ""
-        }`}
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="m6 9 6 6 6-6"
-        />
-      </svg>
-    </button>
-
-    {/* Options */}
-    {dropdownOpen && (
-      <div className="absolute z-50 left-0 right-0 mt-2 bg-white border border-zinc-200 rounded-2xl shadow-lg overflow-hidden">
-        <div className="h-1 bg-yellow-400" />
-
-        <div className="py-2">
-          {inquiryOptions.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => {
-                setFormData((prev) => ({
-                  ...prev,
-                  inquiryType: option,
-                }));
-
-                setDropdownOpen(false);
-              }}
-              className={`w-full text-left px-5 py-4 text-sm font-bold transition-colors ${
-                formData.inquiryType === option
-                  ? "text-brand-green bg-green-50"
-                  : "text-brand-green hover:bg-zinc-50"
-              }`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      </div>
-    )}
-  </div>
-</div>
+                      {dropdownOpen && (
+                        <div className="absolute z-50 left-0 right-0 mt-2 bg-white border border-zinc-200 rounded-2xl shadow-lg overflow-hidden">
+                          <div className="h-1 bg-yellow-400" />
+                          <div className="py-2">
+                            {inquiryOptions.map((option) => (
+                              <button
+                                key={option}
+                                type="button"
+                                onClick={() => {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    inquiryType: option,
+                                  }));
+                                  setDropdownOpen(false);
+                                }}
+                                className={`w-full text-left px-5 py-4 text-sm font-bold transition-colors ${
+                                  formData.inquiryType === option
+                                    ? "text-brand-green bg-green-50"
+                                    : "text-brand-green hover:bg-zinc-50"
+                                }`}
+                              >
+                                {option}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -375,13 +412,19 @@ const handleSubmit = async (e: React.FormEvent) => {
                     className="w-full bg-white border border-zinc-200 rounded-2xl p-5 text-base font-semibold text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-brand-green transition-colors resize-y"
                   />
                 </div>
-<Captcha
-  value={captchaValue}
-  onChange={setCaptchaValue}
-  onGenerate={setExpectedCaptcha} // 3. Store generated value in parent
-/>
+
+                <Captcha
+                  value={captchaValue}
+                  onChange={setCaptchaValue}
+                  onGenerate={setExpectedCaptcha}
+                />
+
                 {status.message && (
-                  <p className={`text-sm font-semibold ${status.success ? "text-green-600" : "text-red-600"}`}>
+                  <p
+                    className={`text-sm font-semibold ${
+                      status.success ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
                     {status.message}
                   </p>
                 )}

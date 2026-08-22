@@ -300,12 +300,21 @@ export default function BookingModal({
                     pattern="^\+[1-9][0-9]{7,14}$"
                     required
                     value={form.phone}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        phone: e.target.value,
-                      })
-                    }
+                   onChange={(e) => {
+                            let value = e.target.value;
+                            value = value.replace(/[^0-9+]/g, "");
+                            if (value.includes("+")) {
+                              value = "+" + value.replace(/\+/g, "");
+                            }
+                            if (value.startsWith("+")) {
+                              value = "+" + value.substring(1).slice(0, 15);
+                            }
+
+                            setForm({
+                              ...form,
+                              phone: value,
+                            });
+                          }}
                     className="
                       w-full
                       bg-white

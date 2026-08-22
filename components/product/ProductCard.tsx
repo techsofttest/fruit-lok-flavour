@@ -72,7 +72,22 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           {/* Star Ratings */}
           <div className="flex items-center gap-1.5 mb-2">
             <div className="flex text-white text-lg">
-              {"★".repeat(Math.round(parseFloat(product.details.rating)))}
+              {[1, 2, 3, 4, 5].map((star) => {
+                const rating = parseFloat(product.details.rating || "0");
+
+                return (
+                  <span
+                    key={star}
+                    className={
+                      star <= Math.round(rating)
+                        ? "text-brand-white"
+                        : "text-zinc-500"
+                    }
+                  >
+                    ★
+                  </span>
+                );
+              })}
             </div>
              {/* {Number(product?.details?.reviews) > 0 && (    
             <span className="text-sm font-semibold text-white/80">
