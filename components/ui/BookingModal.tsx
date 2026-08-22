@@ -296,8 +296,7 @@ export default function BookingModal({
 
                   <input
                     type="tel"
-                      placeholder="+91 98765 43210"
-                    pattern="^\+[1-9][0-9]{7,14}$"
+                      placeholder="+91 98765 43210"                    
                     required
                     value={form.phone}
                    onChange={(e) => {
