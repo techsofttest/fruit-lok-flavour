@@ -54,6 +54,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/25 to-transparent rounded-b-[2rem] pointer-events-none z-0" />
 
           {/* Product PNG Image - overflows card top */}
+           {product.mainimg&& (
           <div className="absolute -top-32 bottom-2 left-1/2 -translate-x-1/2 w-60 z-10 transition-transform duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-3">
             <Image
               src={product.mainimg ||""}
@@ -63,7 +64,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
               className="object-contain object-bottom"
               priority={priority}
             />
-          </div>
+          </div>)}
         </div>
 
         {/* Product Details */}
@@ -73,9 +74,10 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             <div className="flex text-white text-lg">
               {"★".repeat(Math.round(parseFloat(product.details.rating)))}
             </div>
+             {/* {Number(product?.details?.reviews) > 0 && (    
             <span className="text-sm font-semibold text-white/80">
               ({product.details.reviews })
-            </span>
+            </span>)} */}
           </div>
 
           {/* Name */}

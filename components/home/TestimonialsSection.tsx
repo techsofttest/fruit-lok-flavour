@@ -1,8 +1,4 @@
 "use client";
-// components/home/TestimonialsSection.tsx
-// Testimonials slider — styled after the reference image.
-// Green textured bg (section-bg-green.svg), left photo with quote marks, right text.
-
 import Image from "next/image";
 import { useState } from "react";
 

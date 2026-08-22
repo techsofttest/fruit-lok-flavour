@@ -12,7 +12,7 @@ export default function JackfruitFeature({page}:{page:any}) {
       <div className="absolute inset-0 z-0">
         <Image
           src="/section-bg/bg-yello2.svg"
-          alt=""
+          alt="section-bg"
           fill
           className="object-cover object-center"
           priority

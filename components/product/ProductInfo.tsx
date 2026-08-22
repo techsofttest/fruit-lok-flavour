@@ -46,7 +46,17 @@ const [selectedSample, setSelectedSample] = useState<{
     0: true,
   });
   const [isDownloading, setIsDownloading] = useState(false);
+const [isExpanded, setIsExpanded] = useState(false);
 
+  if (!product.details.ingredients) return null;
+
+  // Character threshold to determine if "See more" is needed
+  const CHARACTER_LIMIT = 120;
+  const isLongText = product.details.ingredients.length > CHARACTER_LIMIT;
+
+  const displayText = isExpanded || !isLongText 
+    ? product.details.ingredients 
+    : `${product.details.ingredients.slice(0, CHARACTER_LIMIT)}...`;
   const toggleSection = (key: string | number) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
@@ -197,9 +207,22 @@ const [selectedSample, setSelectedSample] = useState<{
         </div>)}
         {product.details.ingredients && (
         <div>
-          <h4 className="text-sm font-bold uppercase text-brand-green mb-1">Ingredients</h4>
-          <p className="text-base text-zinc-900 font-bold">{product.details.ingredients || ""}</p>
-        </div>)}
+      <h4 className="text-sm font-bold uppercase text-brand-green mb-1">
+        Ingredients
+      </h4>
+      <p className="text-base text-zinc-900 font-bold inline">
+        {displayText}
+      </p>
+      {isLongText && (
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="ml-2 text-xs font-extrabold uppercase text-brand-green hover:underline focus:outline-none"
+        >
+          {isExpanded ? "See Less" : "See More"}
+        </button>
+      )}
+    </div>)}
       </div>
 
       {/* Nutritional Table */}

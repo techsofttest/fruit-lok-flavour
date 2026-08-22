@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Captcha from "@/app/contact/Captcha";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -9,22 +10,46 @@ interface BookingModalProps {
   sampleName?: string;
 }
 
+const COUNTRY_CODES = [
+  { code: "+971", country: "UAE", flag: "🇦🇪", digits: 9 },
+  { code: "+91", country: "IN", flag: "🇮🇳", digits: 10 },
+  { code: "+1", country: "US/CA", flag: "🇺🇸", digits: 10 },
+  { code: "+44", country: "UK", flag: "🇬🇧", digits: 10 },
+  { code: "+966", country: "SA", flag: "🇸🇦", digits: 9 },
+  { code: "+64", country: "NZ", flag: "🇳🇿", digits: 9 },
+];
+
 export default function BookingModal({
   isOpen,
   onClose,
   sampleId,
   sampleName,
 }: BookingModalProps) {
+  const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
+    countryCode: COUNTRY_CODES[0].code,
     message: "",
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  const [captchaValue, setCaptchaValue] = useState("");
+  const [expectedCaptcha, setExpectedCaptcha] = useState("");
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "");
+    setForm((prev) => ({
+      ...prev,
+      phone: value,
+      countryCode: selectedCountry.code,
+    }));
+  };
 
   // Prevent background scrolling when modal is open
   useEffect(() => {
@@ -43,8 +68,15 @@ export default function BookingModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
+
+    // Validate CAPTCHA before making API call
+    if (captchaValue.trim().toUpperCase() !== expectedCaptcha.toUpperCase()) {
+      setError("Incorrect CAPTCHA code. Please try again.");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const response = await fetch(
@@ -58,12 +90,14 @@ export default function BookingModal({
           body: JSON.stringify({
             name: form.name,
             email: form.email,
-            phone: form.phone,
+            phone: `${selectedCountry.code} ${form.phone}`,
             message: form.message,
             requestType: "Request Sample",
             sampleId: sampleId ? String(sampleId) : "",
             sampleName: sampleName,
             inquiryType: "Sample Request",
+            captchaInput: captchaValue,
+            expectedCaptcha: expectedCaptcha,
           }),
         }
       );
@@ -87,7 +121,7 @@ export default function BookingModal({
       {/* Backdrop */}
       <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Modal Container - Max height with scroll restricted inside modal */}
+      {/* Modal Container */}
       <div
         className="
           relative z-10
@@ -124,7 +158,7 @@ export default function BookingModal({
         </button>
 
         {submitted ? (
-          /* Success */
+          /* Success Screen */
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div
               className="
@@ -205,17 +239,16 @@ export default function BookingModal({
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-
               {/* Name */}
               <div>
-                <label
-                  className="  block text-xs font-bold uppercase  tracking-wider  mb-2 text-zinc-700 ">
+                <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-zinc-700">
                   Full Name
                 </label>
 
                 <input
                   type="text"
-                  required value={form.name}
+                  required
+                  value={form.name}
                   onChange={(e) =>
                     setForm({
                       ...form,
@@ -244,17 +277,7 @@ export default function BookingModal({
               {/* Email + Phone */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label
-                    className="
-                      block
-                      text-xs
-                      font-bold
-                      uppercase
-                      tracking-wider
-                      mb-2
-                      text-zinc-700
-                    "
-                  >
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-zinc-700">
                     Email Address
                   </label>
 
@@ -288,63 +311,57 @@ export default function BookingModal({
                 </div>
 
                 <div>
-                  <label
-                    className="
-                      block
-                      text-xs
-                      font-bold
-                      uppercase
-                      tracking-wider
-                      mb-2
-                      text-zinc-700
-                    "
-                  >
-                    Phone Number
+                  <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-zinc-700">
+                    Phone Number *
                   </label>
+                  <div className="flex gap-2">
+                    <div className="relative">
+                      <select
+                        value={selectedCountry.code}
+                        onChange={(e) => {
+                          const country = COUNTRY_CODES.find(
+                            (c) => c.code === e.target.value
+                          );
+                          if (country) {
+                            setSelectedCountry(country);
+                            setForm((prev) => ({
+                              ...prev,
+                              countryCode: country.code,
+                            }));
+                          }
+                        }}
+                        className="h-full bg-white border border-zinc-200 rounded-xl px-2.5 py-3 text-xs font-semibold text-zinc-900 focus:outline-none focus:border-brand-green transition-colors cursor-pointer appearance-none pr-7"
+                      >
+                        {COUNTRY_CODES.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.flag} {c.code}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-zinc-500 text-[10px]">
+                        ▼
+                      </div>
+                    </div>
 
-                  <input
-                    type="tel"
-                    required
-                    value={form.phone}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        phone: e.target.value,
-                      })
-                    }
-                    placeholder="+91 XXXXX XXXXX"
-                    className="
-                      w-full
-                      bg-white
-                      border border-zinc-200
-                      rounded-xl
-                      px-4 py-3
-                      text-sm
-                      text-zinc-900
-                      placeholder:text-zinc-400
-                      focus:outline-none
-                      focus:border-brand-green
-                      focus:ring-2
-                      focus:ring-brand-green/10
-                      transition-all
-                    "
-                  />
+                    <input
+                      type="tel"
+                      name="phone"
+                      required
+                      pattern={`[0-9]{${selectedCountry.digits}}`}
+                      title={`Please enter a valid ${selectedCountry.digits}-digit phone number`}
+                      value={form.phone}
+                      onChange={handlePhoneChange}
+                      maxLength={selectedCountry.digits}
+                      placeholder="501234567"
+                      className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/10 transition-all"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Sample */}
               <div>
-                <label
-                  className="
-                    block
-                    text-xs
-                    font-bold
-                    uppercase
-                    tracking-wider
-                    mb-2
-                    text-zinc-700
-                  "
-                >
+                <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-zinc-700">
                   Sample Requested
                 </label>
 
@@ -368,17 +385,7 @@ export default function BookingModal({
 
               {/* Message */}
               <div>
-                <label
-                  className="
-                    block
-                    text-xs
-                    font-bold
-                    uppercase
-                    tracking-wider
-                    mb-2
-                    text-zinc-700
-                  "
-                >
+                <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-zinc-700">
                   Message
                 </label>
 
@@ -411,18 +418,16 @@ export default function BookingModal({
                 />
               </div>
 
-              {/* Error */}
+              {/* Custom Captcha */}
+              <Captcha
+                value={captchaValue}
+                onChange={setCaptchaValue}
+                onGenerate={setExpectedCaptcha}
+              />
+
+              {/* Error Display */}
               {error && (
-                <div
-                  className="
-                    rounded-xl
-                    bg-red-50
-                    border border-red-200
-                    text-red-600
-                    px-4 py-3
-                    text-sm
-                  "
-                >
+                <div className="rounded-xl bg-red-50 border border-red-200 text-red-600 px-4 py-3 text-sm">
                   {error}
                 </div>
               )}
@@ -454,10 +459,6 @@ export default function BookingModal({
                 >
                   {loading ? "Sending Request..." : "Request Free Sample"}
                 </button>
-
-                <p className="text-center text-[11px] text-zinc-400 mt-3">
-                  Our team will contact you regarding your sample request.
-                </p>
               </div>
             </form>
           </div>
