@@ -1,12 +1,25 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import SectionWaveDivider from "@/components/ui/SectionWaveDivider";
 import CTASection from "@/components/home/CTASection";
 import PageHeroBanner from "@/components/global/PageHeroBanner";
-
+import JackfruitButton from "@/components/ui/JackfruitButton";
 export default function BlogsPage({ banner, blog ,cta}: { banner: any; cta: any; blog: any[];}) {
+      const [visibleCount, setVisibleCount] = useState(10);
+      const [isLoading, setIsLoading] = useState(false);
+    
+      const handleLoadMore = () => {
+        setIsLoading(true);
+        setTimeout(() => {
+          setVisibleCount((prev) => prev + 4);
+          setIsLoading(false);
+        }, 600);
+      };
+    
+      const displayedReviews = blog.slice(0, visibleCount);
+      const hasMore = visibleCount < blog.length;
   return (
     <main className="flex flex-col flex-1 pt-14 md:pt-24 bg-white text-zinc-950">
       {/* Hero Banner Component */}
@@ -22,7 +35,7 @@ export default function BlogsPage({ banner, blog ,cta}: { banner: any; cta: any;
       {/* Blogs Listing Grid Section */}
       <section className="py-10 sm:py-16 md:py-24 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto w-full relative z-30">
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-10">
-          {blog.map((post) => (
+          {displayedReviews.map((post) => (
             <Link
               key={post.id}
               href={`/blogs/${post.slug}`}
@@ -60,6 +73,29 @@ export default function BlogsPage({ banner, blog ,cta}: { banner: any; cta: any;
             </Link>
           ))}
         </div>
+         {hasMore && (
+                        <div className="mt-12 flex justify-center">
+                          <JackfruitButton
+                            variant="outline"
+                            colorClass="text-brand-green"
+                            textClass="text-brand-green"
+                            onClick={handleLoadMore}
+                            disabled={isLoading}
+                          >
+                            {isLoading ? (
+                              <span className="flex items-center gap-2">
+                                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                Loading More Reviews...
+                              </span>
+                            ) : (
+                              "Load More Reviews"
+                            )}
+                          </JackfruitButton>
+                        </div>
+                      )}
       </section>
 
       {/* CTA Section */}
