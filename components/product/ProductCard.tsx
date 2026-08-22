@@ -80,8 +80,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                     key={star}
                     className={
                       star <= Math.round(rating)
-                        ? "text-brand-white"
-                        : "text-zinc-500"
+                        ? "text-zinc-500"
+                        : "text-brand-white"
                     }
                   >
                     ★
